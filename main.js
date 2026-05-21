@@ -1,3 +1,7 @@
+import { inject } from '@vercel/analytics';
+
+inject();
+
 let blessings = [];
 let filteredBlessings = [];
 let visibleCount = 40;
@@ -88,11 +92,11 @@ function escapeRegExp(string) {
 // Highlighting text without breaking HTML tags
 function highlightText(text, search) {
   if (!search) return text;
-  
+
   // Split by HTML tags to prevent highlighting tag attributes like color='#83d18a'
   const parts = text.split(/(<[^>]*>)/);
   const regex = new RegExp(`(${escapeRegExp(search)})`, 'gi');
-  
+
   return parts.map(part => {
     if (part.startsWith('<') && part.endsWith('>')) {
       return part; // Return tag unchanged
@@ -113,17 +117,17 @@ async function init() {
   try {
     const response = await fetch('/output.csv');
     if (!response.ok) throw new Error('Failed to load output.csv');
-    
+
     const csvText = await response.text();
     const parsedData = parseCSV(csvText);
-    
+
     // Header should be: id,name english,description,desc english
     // Let's find index mappings
     const headers = parsedData[0].map(h => h.trim().toLowerCase());
     const idIdx = headers.indexOf('id');
     const nameIdx = headers.indexOf('name english') !== -1 ? headers.indexOf('name english') : 1;
     const descIdx = headers.indexOf('description') !== -1 ? headers.indexOf('description') : 2;
-    
+
     // Process items
     blessings = parsedData.slice(1)
       .filter(row => row.length > 1 && row[idIdx] && row[idIdx].startsWith('bless_'))
@@ -131,7 +135,7 @@ async function init() {
         const id = row[idIdx].trim();
         const name = row[nameIdx] ? row[nameIdx].trim() : 'Unknown';
         const description = row[descIdx] ? row[descIdx].trim() : '';
-        
+
         return {
           id,
           name,
@@ -139,13 +143,13 @@ async function init() {
           category: getCategory(id)
         };
       });
-      
+
     // Update Stats Badge
     updateStats();
-    
+
     // Filter and Render
     filterAndSort();
-    
+
     // Hide loader
     setTimeout(() => {
       loadingScreen.style.opacity = '0';
@@ -153,7 +157,7 @@ async function init() {
         loadingScreen.style.display = 'none';
       }, 400);
     }, 300);
-    
+
   } catch (error) {
     console.error('Error starting the database:', error);
     document.querySelector('.loading-text').textContent = 'Error loading database. Please refresh.';
@@ -169,22 +173,22 @@ function updateStats() {
 // Filter and Sort Engine (Search Query Filter & ID Sorting)
 function filterAndSort() {
   const query = state.searchQuery.toLowerCase();
-  
+
   // Filter by Search Query
   filteredBlessings = blessings.filter(item => {
     if (query) {
-      return item.id.toLowerCase().includes(query) || 
-             item.name.toLowerCase().includes(query) || 
-             item.description.toLowerCase().includes(query);
+      return item.id.toLowerCase().includes(query) ||
+        item.name.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query);
     }
     return true;
   });
-  
+
   // Sort by ID naturally
   filteredBlessings.sort((a, b) => {
     return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
   });
-  
+
   // Render
   visibleCount = ITEMS_PER_PAGE;
   renderBlessings();
@@ -194,27 +198,27 @@ function filterAndSort() {
 function renderBlessings() {
   const total = filteredBlessings.length;
   resultsCount.textContent = `Showing ${Math.min(visibleCount, total)} of ${total} results`;
-  
+
   if (total === 0) {
     blessingsGrid.innerHTML = '';
     noResults.style.display = 'flex';
     loadMoreContainer.style.display = 'none';
     return;
   }
-  
+
   noResults.style.display = 'none';
-  
+
   const toRender = filteredBlessings.slice(0, visibleCount);
-  
+
   const cardsHTML = toRender.map(item => {
     const cleanId = item.id.replace('bless_', '');
     const imgUrl = `/blesses/${cleanId}.png`;
-    
+
     // Highlight matching text if search is active
     const highlightedName = highlightText(item.name, state.searchQuery);
     const highlightedId = highlightText(item.id, state.searchQuery);
     const highlightedDesc = sanitizeAndCloseTags(highlightText(item.description, state.searchQuery));
-    
+
     return `
       <div class="blessing-card" data-id="${item.id}">
         <div class="card-left">
@@ -235,11 +239,11 @@ function renderBlessings() {
       </div>
     `;
   }).join('');
-  
-  blessingsGrid.innerHTML = cardsHTML;
-  
 
-  
+  blessingsGrid.innerHTML = cardsHTML;
+
+
+
   // Attach event listeners to new cards
   document.querySelectorAll('.blessing-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -256,10 +260,10 @@ let isLoadingMore = false;
 function loadMore() {
   if (isLoadingMore) return;
   isLoadingMore = true;
-  
+
   visibleCount += ITEMS_PER_PAGE;
   renderBlessings();
-  
+
   // Settle DOM layout and release throttle lock
   setTimeout(() => {
     isLoadingMore = false;
@@ -270,25 +274,25 @@ function loadMore() {
 function openModal(item) {
   const cleanId = item.id.replace('bless_', '');
   const imgUrl = `/blesses/${cleanId}.png`;
-  
+
   modalTitle.textContent = item.name;
   modalId.textContent = item.id;
-  
+
   modalDescription.innerHTML = sanitizeAndCloseTags(item.description);
-  
+
   // Set image inside modal
   modalIcon.src = imgUrl;
   modalIcon.style.display = 'block';
   modalIconFallback.style.display = 'none';
-  
+
   modalIcon.onerror = () => {
     modalIcon.style.display = 'none';
     modalIconFallback.style.display = 'flex';
     modalIconFallback.textContent = item.name.charAt(0).toUpperCase();
   };
-  
+
   // Modal class active toggle
-  
+
   modalOverlay.classList.add('active');
 }
 
