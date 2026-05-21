@@ -30,8 +30,7 @@ const modalTitle = document.getElementById('modal-title');
 const modalId = document.getElementById('modal-id');
 const modalCategory = document.getElementById('modal-category');
 const modalDescription = document.getElementById('modal-description');
-const modalCopyBtn = document.getElementById('modal-copy-btn');
-const toast = document.getElementById('toast');
+const modalFooterCloseBtn = document.getElementById('modal-footer-close-btn');
 
 // View Mode Toggles
 const viewGridBtn = document.getElementById('view-grid-btn');
@@ -290,10 +289,7 @@ function openModal(item) {
     modalIconFallback.textContent = item.name.charAt(0).toUpperCase();
   };
   
-  modalCopyBtn.onclick = () => {
-    navigator.clipboard.writeText(item.id);
-    showToast('Copied ID to clipboard!');
-  };
+  // Modal class active toggle
   
   modalOverlay.classList.add('active');
 }
@@ -302,14 +298,7 @@ function closeModal() {
   modalOverlay.classList.remove('active');
 }
 
-// Custom Toast System
-function showToast(message) {
-  document.getElementById('toast-text').textContent = message;
-  toast.classList.add('active');
-  setTimeout(() => {
-    toast.classList.remove('active');
-  }, 2500);
-}
+// Modal Operations
 
 // Event Listeners
 searchInput.addEventListener('input', (e) => {
@@ -353,6 +342,7 @@ modalOverlay.addEventListener('click', (e) => {
 });
 
 modalCloseBtn.addEventListener('click', closeModal);
+modalFooterCloseBtn.addEventListener('click', closeModal);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();

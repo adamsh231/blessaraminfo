@@ -667,6 +667,7 @@ footer {
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  z-index: 10;
 }
 
 .modal-close-btn:hover {
