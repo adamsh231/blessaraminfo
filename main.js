@@ -101,6 +101,13 @@ function highlightText(text, search) {
   }).join('');
 }
 
+// Native DOMParser to parse, balance, and auto-close any malformed HTML tags
+function sanitizeAndCloseTags(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  return doc.body.innerHTML;
+}
+
 // Initialize application
 async function init() {
   try {
@@ -206,7 +213,7 @@ function renderBlessings() {
     // Highlight matching text if search is active
     const highlightedName = highlightText(item.name, state.searchQuery);
     const highlightedId = highlightText(item.id, state.searchQuery);
-    const highlightedDesc = highlightText(item.description, state.searchQuery);
+    const highlightedDesc = sanitizeAndCloseTags(highlightText(item.description, state.searchQuery));
     
     return `
       <div class="blessing-card" data-id="${item.id}">
@@ -243,10 +250,20 @@ function renderBlessings() {
   });
 }
 
+let isLoadingMore = false;
+
 // Load more action
 function loadMore() {
+  if (isLoadingMore) return;
+  isLoadingMore = true;
+  
   visibleCount += ITEMS_PER_PAGE;
   renderBlessings();
+  
+  // Settle DOM layout and release throttle lock
+  setTimeout(() => {
+    isLoadingMore = false;
+  }, 150);
 }
 
 // Modal Interaction
@@ -257,7 +274,7 @@ function openModal(item) {
   modalTitle.textContent = item.name;
   modalId.textContent = item.id;
   
-  modalDescription.innerHTML = item.description;
+  modalDescription.innerHTML = sanitizeAndCloseTags(item.description);
   
   // Set image inside modal
   modalIcon.src = imgUrl;
