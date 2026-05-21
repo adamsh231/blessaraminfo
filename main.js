@@ -16,8 +16,6 @@ const searchInput = document.getElementById('search-input');
 const clearSearchBtn = document.getElementById('clear-search-btn');
 const resultsCount = document.getElementById('results-count');
 const statsBadge = document.getElementById('stats-badge');
-const loadMoreContainer = document.getElementById('load-more-container');
-const loadMoreBtn = document.getElementById('load-more-btn');
 const noResults = document.getElementById('no-results');
 
 // Modal Elements
@@ -28,7 +26,6 @@ const modalIcon = document.getElementById('modal-icon');
 const modalIconFallback = document.getElementById('modal-icon-fallback');
 const modalTitle = document.getElementById('modal-title');
 const modalId = document.getElementById('modal-id');
-const modalCategory = document.getElementById('modal-category');
 const modalDescription = document.getElementById('modal-description');
 const modalFooterCloseBtn = document.getElementById('modal-footer-close-btn');
 
@@ -211,10 +208,6 @@ function renderBlessings() {
     const highlightedId = highlightText(item.id, state.searchQuery);
     const highlightedDesc = highlightText(item.description, state.searchQuery);
     
-    let categoryLabel = 'Common';
-    if (item.category === 'active') categoryLabel = 'Active Skill';
-    if (item.category === 'upgrade') categoryLabel = 'Upgrade';
-    
     return `
       <div class="blessing-card" data-id="${item.id}">
         <div class="card-left">
@@ -228,7 +221,6 @@ function renderBlessings() {
         <div class="card-right">
           <div class="card-meta">
             <span class="blessing-id">${highlightedId}</span>
-            <span class="category-tag ${item.category}">${categoryLabel}</span>
           </div>
           <h3 class="blessing-name">${highlightedName}</h3>
           <div class="blessing-description">${highlightedDesc}</div>
@@ -239,12 +231,7 @@ function renderBlessings() {
   
   blessingsGrid.innerHTML = cardsHTML;
   
-  // Show / Hide Load More
-  if (visibleCount < total) {
-    loadMoreContainer.style.display = 'flex';
-  } else {
-    loadMoreContainer.style.display = 'none';
-  }
+
   
   // Attach event listeners to new cards
   document.querySelectorAll('.blessing-card').forEach(card => {
@@ -270,12 +257,6 @@ function openModal(item) {
   modalTitle.textContent = item.name;
   modalId.textContent = item.id;
   
-  let categoryLabel = 'Common';
-  if (item.category === 'active') categoryLabel = 'Active Skill';
-  if (item.category === 'upgrade') categoryLabel = 'Upgrade';
-  
-  modalCategory.textContent = categoryLabel;
-  modalCategory.className = `category-tag ${item.category}`;
   modalDescription.innerHTML = item.description;
   
   // Set image inside modal
@@ -319,7 +300,14 @@ clearSearchBtn.addEventListener('click', () => {
   searchInput.focus();
 });
 
-loadMoreBtn.addEventListener('click', loadMore);
+// Auto lazy load when scrolling near bottom
+window.addEventListener('scroll', () => {
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 300) {
+    if (visibleCount < filteredBlessings.length) {
+      loadMore();
+    }
+  }
+});
 
 // View Mode Toggles
 viewGridBtn.addEventListener('click', () => {
