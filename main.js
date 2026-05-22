@@ -1,8 +1,10 @@
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
-inject();
-injectSpeedInsights();
+// Initialize Vercel Analytics and Speed Insights in production mode
+// (Set mode: 'production' to force production tracking, or use Vite's import.meta.env.PROD)
+inject({ mode: 'production' });
+injectSpeedInsights({ mode: 'production' });
 
 let blessings = [];
 let filteredBlessings = [];
